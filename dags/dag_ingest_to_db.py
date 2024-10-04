@@ -16,10 +16,6 @@ from modules import (
     extract_values_as_tuple
     )
 
-# Loading env variables
-# config_path = '/opt/airflow/secrets/'
-# load_dotenv(dotenv_path=f'{config_path}/.env')
-
 # List of ticker_ids
 ticker_ids = ['bitcoin', 'ethereum', 'zcash']
 
@@ -34,12 +30,10 @@ def get_api_data(ticker_id: str) -> list:
     # endpoint the coingecko
     endpoint = f"https://api.coingecko.com/api/v3/coins/{ticker_id}/tickers"
     data = get_data(endpoint)
-    #data_formatted = format_ticker_data(data)
     return data
 
 def ingest_data(**context):
     # Get data from coingecko API
-    # data = context['task_instance'].xcom_pull(task_ids="get_api_data")
     for i in range((60*5)-1):
         data = context['task_instance'].xcom_pull(
             task_ids="api_ingestion.get_api_data",
@@ -109,18 +103,12 @@ def ingest_data(**context):
                 conn.close()
 
         time.sleep(1)
-        # for row in data_formatted:
-        #     cursor = conn.cursor()
-        #     cursor.execute()
-
-    #return data_formatted
-
 
 # DAG definition
 default_args = {
     'owner' : 'adeleglise',
-    'start_date': datetime(2024, 10, 3),  # Fecha de inicio del DAG
-    'retries': 5  # Número de reintentos en caso de fallo
+    'start_date': datetime(2024, 10, 4),  # Start date
+    'retries': 5  # Number of retries
 }
 
 with DAG(dag_id='ingest_data',
@@ -134,12 +122,6 @@ with DAG(dag_id='ingest_data',
         task_id='check_table_exists',
         python_callable=check_table_exists
     )
-    
-    # tarea_2 = PythonOperator(
-    #     task_id='get_api_data',
-    #     python_callable=get_api_data,
-    #     op_kwargs={'ticker_id': 'bitcoin'}
-    # )
 
     # Create task group for data ingestion
     with TaskGroup(group_id='api_ingestion') as api_ingestion_group:
@@ -157,5 +139,4 @@ with DAG(dag_id='ingest_data',
     )
 
     # Definition of task sequence
-    # tarea_1 >> tarea_2 >> tarea_3
     tarea_1 >> api_ingestion_group >> tarea_3
