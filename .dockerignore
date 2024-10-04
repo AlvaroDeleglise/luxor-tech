@@ -1,0 +1,9 @@
+# ignore .git and .cache files
+.git
+.cache
+.gitkeep
+
+# ignore all markdown files
+.md
+
+
